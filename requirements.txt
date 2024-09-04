@@ -1,0 +1,8 @@
+python==3.11.9
+orekit==12.0.1     #main simulation library
+orekit_stubs==0.1
+geojson    #to visualize the footprint in geojson, export the information in json format
+# poliastro
+basemap   #for 2d plot 
+deap   #for GA optimization algorithm
+# czml3
