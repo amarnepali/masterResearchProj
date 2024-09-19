@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks=24 # indicate the number of core required
-#SBATCH --partition=amilan
 #SBATCH --job-name=nepa0034orbOpt
 #SBATCH --output=orbOpt-log.txt
 #SBATCH --error=logs/%A.error
