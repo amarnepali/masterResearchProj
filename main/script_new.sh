@@ -1,6 +1,5 @@
 #!/bin/bash
 #SBATCH --job-name long_job_nsga3
-#SBATCH --partition=standard
 #SBATCH --qos=short
 #SBATCH --reservation=shortqos
 #SBATCH --mail-type=ALL
