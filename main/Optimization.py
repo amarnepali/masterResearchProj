@@ -41,6 +41,13 @@ import os
 
 from deap import base, creator, tools, algorithms
 
+
+# PROJECT_DIR = os.path.join(os.path.sep, 'projects', os.environ['USER'], 'my_project')
+# DATA_IN = os.path.join(PROJECT_DIR, 'data_in')
+# DATA_OUT = os.path.join(PROJECT_DIR, 'data_out', os.environ['SLURM_JOB_ID'])
+
+
+
 # import defined functions
 # from tleParser import parse_tle 
 # from SatelliteState import get_satelliteStates, propagator_to_statePosition
@@ -374,8 +381,7 @@ def main():
     # from org.orekit.sensors import FieldOfView, ImagingSensor, ObservationSensor
     #  /// initialization of package
 
-    # print(utc)
-    # read tle and Create propagator of satellite based on tle  
+
     mytle = TLE(line1, line2)
     kepOrbEle = parse_tle(line1,line2)
 
@@ -466,8 +472,21 @@ def main():
     toolbox.register("select", tools.selTournament, tournsize=3)
 
     # Run the Genetic Algorithm
-    population = toolbox.population(n=20)
+    population = toolbox.population(n=2)
     algorithms.eaSimple(population, toolbox, cxpb=0.9, mutpb=0.1, ngen=2, stats=None, halloffame=None, verbose=True)
+
+    # Convert timedelta to hours
+    hours = [td.total_seconds() / 3600 for td in fitness_values]
+    plt.bar(range(len(hours)), hours, color='blue')
+    plt.xlabel('Event Index')
+    plt.ylabel('Time (Hours)')
+    plt.title('Time Intervals in Hours')
+    plt.xticks(range(len(hours)), rotation=90)
+    plt.grid(True)
+    # Show bar plot
+    plt.tight_layout()
+    plt.savefig(os.path.join('ConstellationProj/masterResearchProj/main/DATA_OUT', 'timeInterval'))
+
 
     # Extract and print the best solution
     best_individual = tools.selBest(population, k=1)[0]
