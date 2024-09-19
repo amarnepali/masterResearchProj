@@ -6,7 +6,7 @@
 #SBATCH --output=orbOpt-log.txt
 #SBATCH --error=logs/%A.error
 #SBATCH --cpus-per-task=64
-#SBATCH --mem=100G
+#SBATCH --mem=128G
 #SBATCH --time=24:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=nepa0034@flinders.edu.au
