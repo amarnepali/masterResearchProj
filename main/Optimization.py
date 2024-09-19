@@ -485,7 +485,7 @@ def main():
     plt.grid(True)
     # Show bar plot
     plt.tight_layout()
-    plt.savefig(os.path.join('ConstellationProj/masterResearchProj/main/DATA_OUT', 'timeInterval'))
+    plt.savefig(os.path.join('DATA_OUT', 'timeInterval'))
 
 
     # Extract and print the best solution
