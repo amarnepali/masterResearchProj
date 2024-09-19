@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --nodes=1
+#SBATCH --nodes=2
 #SBATCH --ntasks=16 # indicate the number of core required
 #SBATCH --job-name=nepa0034orbOpt
 #SBATCH --output=orbOpt-log.txt
