@@ -5,7 +5,7 @@
 #SBATCH --error=logs/%A.error
 #SBATCH --partition=gpu
 #SBATCH --cpus-per-task=16
-#SBATCH --mem-per-cpu=16G
+#SBATCH --mem-per-cpu=8G
 #SBATCH --gres="gpu:1"
 #SBATCH --time=1-0
 #SBATCH --mail-type=ALL
