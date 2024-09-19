@@ -5,8 +5,7 @@
 #SBATCH --job-name=nepa0034orbOpt
 #SBATCH --output=orbOpt-log.txt
 #SBATCH --error=logs/%A.error
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=32
+#SBATCH --cpus-per-task=64
 #SBATCH --mem=100G
 #SBATCH --time=24:00:00
 #SBATCH --mail-type=ALL
