@@ -588,6 +588,12 @@ def main():
         print("mutation individual: ", individual)
         return individual,
 
+    # Dynamic crossover and mutation adjustment based on generation
+    def dynamic_crossover_mutation(gen, ngen, Pc_start=0.7, Pm_start=0.2, Pm_end=0.4):
+        Pc = Pc_start * (1 - gen / ngen)  # Crossover rate decreases over generations
+        Pm = Pm_start + (Pm_end - Pm_start) * (gen / ngen)  # Mutation rate increases over generations
+        return Pc, Pm
+
 
     toolbox.register("evaluate", evaluate_both)
 
@@ -599,21 +605,61 @@ def main():
     reference_points = generate_reference_points(nobj=2, p=12)
     toolbox.register("select", select_nsga3, reference_points=reference_points)
 
-    # Create population
-    population = toolbox.population(n=50)
+    # Genetic algorithm with dynamic crossover and mutation probabilities
+    def run_ga_dynamic(pop_size=20, ngen=10):
+        population = toolbox.population(n=pop_size)
+        
+        for gen in range(ngen):
+            Pc, Pm = dynamic_crossover_mutation(gen, ngen)  # Dynamic crossover and mutation probabilities
+            
+            offspring = toolbox.select(population, len(population))
+            offspring = list(map(toolbox.clone, offspring))
+            
+            # Apply crossover (with dynamic Pc)
+            for child1, child2 in zip(offspring[::2], offspring[1::2]):
+                if np.random.random() < Pc:
+                    toolbox.mate(child1, child2)
+                    del child1.fitness.values
+                    del child2.fitness.values
+            
+            # Apply mutation (with dynamic Pm)
+            for mutant in offspring:
+                if np.random.random() < Pm:
+                    toolbox.mutate(mutant)
+                    del mutant.fitness.values
+            
+            # Evaluate individuals with invalid fitness
+            invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+            fitnesses = map(toolbox.evaluate, invalid_ind)
+            for ind, fit in zip(invalid_ind, fitnesses):
+                ind.fitness.values = fit
+            
+            # Replace the population with the new offspring
+            population[:] = offspring
+            
+            # Print best individual of the current generation
+            best_ind = tools.selBest(population, 1)[0]
+            print(f"Generation {gen}: Best Individual = {best_ind}, Fitness = {best_ind.fitness.values}")
+            
+        return population
+        
+    nsga_pop = run_ga_dynamic(pop_size=20, ngen=2)  # Example population of 20 and 10 generations
 
-    # Run NSGA-III (similar to NSGA-II)
-    algorithms.eaMuPlusLambda(population, toolbox, mu=10, lambda_=20, cxpb=0.7, mutpb=0.2, ngen=40, stats=None, halloffame=None, verbose=True)
+    # # Create population
+    # population = toolbox.population(n=4)
+
+    # # Run NSGA-III (similar to NSGA-II)
+    # algorithms.eaMuPlusLambda(population, toolbox, mu=10, lambda_=20, cxpb=0.7, mutpb=0.2, ngen=2, stats=None, halloffame=None, verbose=True)
 
 
     ####################################################
     # plot the final population 
-    plot_population(population)
+    plot_population(nsga_pop)
     # plot the fitness_values per individuals event
     plot_fitness_values_per_individual(fitness_values)
 
     # Extract the Pareto front
-    pareto_front = tools.sortNondominated(population, len(population), first_front_only=True)[0]
+    pareto_front = tools.sortNondominated(nsga_pop, len(nsga_pop), first_front_only=True)[0]
 
     # Plot the Pareto front
     revisit_times = [ind.fitness.values[0] for ind in pareto_front]
