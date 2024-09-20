@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --ntasks=1 # indicate the number of core required
 #SBATCH --job-name=nepa0034orbOpt
-#SBATCH --output=orbOpt-log.txt
-#SBATCH --error=logs/%A.error
+#SBATCH --output=/home/$FAN/%x-%j.out.txt
+#SBATCH --error=/home/$FAN/%x-%j.err.txt
 #SBATCH --partition=gpu
 #SBATCH --cpus-per-task=16
 #SBATCH --mem-per-cpu=8G
