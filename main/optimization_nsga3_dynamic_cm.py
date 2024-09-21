@@ -493,7 +493,7 @@ def main():
         plt.grid(True)
         # plt.legend()
         # plt.show()
-        plt.savefig(os.path.join('DATA_OUT', 'final_population_fitness_nsga3_simple'))
+        plt.savefig(os.path.join('DATA_OUT', 'final_population_fitness_nsga3_dynamic_cm'))
 
     def plot_fitness_values_per_individual(fitness_values):
         # Plotting the fitness values of cum dt and rt, with each individual 
@@ -510,7 +510,7 @@ def main():
         plt.title('revisit Time Intervals over Events')
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig(os.path.join('DATA_OUT', 'revisit_time_per_individuals_nsga3_simple'))
+        plt.savefig(os.path.join('DATA_OUT', 'revisit_time_per_individuals_nsga3_dynamic_cm'))
 
         # Generate a line plot for comparison
         plt.figure(figsize=(14, 8))
@@ -520,7 +520,7 @@ def main():
         plt.title('dwell Time Intervals over Events')
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig(os.path.join('DATA_OUT', 'dwell_time_per_individuals_nsga3_simple'))
+        plt.savefig(os.path.join('DATA_OUT', 'dwell_time_per_individuals_nsga3_dynamic_cm'))
 
         # plt.show()
 
@@ -608,6 +608,7 @@ def main():
     # Genetic algorithm with dynamic crossover and mutation probabilities
     def run_ga_dynamic(pop_size=20, ngen=10):
         population = toolbox.population(n=pop_size)
+        population_sizes = []
         
         for gen in range(ngen):
             Pc, Pm = dynamic_crossover_mutation(gen, ngen)  # Dynamic crossover and mutation probabilities
@@ -637,13 +638,55 @@ def main():
             # Replace the population with the new offspring
             population[:] = offspring
             
+            population_sizes.append(len(population))
+
             # Print best individual of the current generation
             best_ind = tools.selBest(population, 1)[0]
             print(f"Generation {gen}: Best Individual = {best_ind}, Fitness = {best_ind.fitness.values}")
-            
+        
+        # Plot population sizes over generations
+        plt.plot(range(ngen), population_sizes, marker='o')
+        plt.xlabel("Generations")
+        plt.ylabel("Population Size")
+        plt.title("Population Size over Generations")
+        plt.savefig(os.path.join('DATA_OUT', 'pop_size_over_generation_nsga3_dynamic_cm'))
+
+
+        # plot the final population 
+        plot_population(population)
+        # plot the fitness_values per individuals event
+        plot_fitness_values_per_individual(fitness_values)
+
+        # Extract the Pareto front
+        pareto_front = tools.sortNondominated(population, len(population), first_front_only=True)[0]
+
+        # Plot the Pareto front
+        revisit_times = [ind.fitness.values[0] for ind in pareto_front]
+        dwell_times = [ind.fitness.values[1] for ind in pareto_front]
+
+        plt.figure(figsize=(10, 6))
+        plt.scatter(revisit_times, dwell_times, color='blue', label="Pareto Front")
+        plt.title('Pareto Front of NSGA-III')
+        plt.xlabel('Revisit Time')
+        plt.ylabel('Dwell Time (seconds)')
+        plt.grid(True)
+        # plt.legend()
+        # plt.show()
+        plt.savefig(os.path.join('DATA_OUT', 'pareto_front_nsga3_dynamic_cm'))
+
+
+        # Get the top 10 best individuals from the Pareto front based on fitness values
+        top_10_best = sorted(pareto_front, key=lambda ind: ind.fitness.values)[:10]
+        # Print the top 10 individuals with their fitness values (revisit time and dwell time)
+        top_10_fitness_values = [(ind.fitness.values[0], ind.fitness.values[1]) for ind in top_10_best]
+
+        # Display the top 10 best fitness values
+        for i, fitness in enumerate(top_10_fitness_values, 1):
+            print(f"Individual {i}: Revisit Time = {fitness[0]}, Dwell Time = {fitness[1]} seconds")
+
         return population
         
-    nsga_pop = run_ga_dynamic(pop_size=20, ngen=2)  # Example population of 20 and 10 generations
+    run_ga_dynamic(pop_size=20, ngen=2)  # Example population of 20 and 10 generations
 
     # # Create population
     # population = toolbox.population(n=4)
@@ -653,38 +696,7 @@ def main():
 
 
     ####################################################
-    # plot the final population 
-    plot_population(nsga_pop)
-    # plot the fitness_values per individuals event
-    plot_fitness_values_per_individual(fitness_values)
-
-    # Extract the Pareto front
-    pareto_front = tools.sortNondominated(nsga_pop, len(nsga_pop), first_front_only=True)[0]
-
-    # Plot the Pareto front
-    revisit_times = [ind.fitness.values[0] for ind in pareto_front]
-    dwell_times = [ind.fitness.values[1] for ind in pareto_front]
-
-    plt.figure(figsize=(10, 6))
-    plt.scatter(revisit_times, dwell_times, color='blue', label="Pareto Front")
-    plt.title('Pareto Front of NSGA-III')
-    plt.xlabel('Revisit Time')
-    plt.ylabel('Dwell Time (seconds)')
-    plt.grid(True)
-    # plt.legend()
-    # plt.show()
-    plt.savefig(os.path.join('DATA_OUT', 'pareto_front_nsga3_simple'))
-
-
-    # Get the top 10 best individuals from the Pareto front based on fitness values
-    top_10_best = sorted(pareto_front, key=lambda ind: ind.fitness.values)[:10]
-    # Print the top 10 individuals with their fitness values (revisit time and dwell time)
-    top_10_fitness_values = [(ind.fitness.values[0], ind.fitness.values[1]) for ind in top_10_best]
-
-    # Display the top 10 best fitness values
-    for i, fitness in enumerate(top_10_fitness_values, 1):
-        print(f"Individual {i}: Revisit Time = {fitness[0]}, Dwell Time = {fitness[1]} seconds")
-
+    
 
 # hook
 if __name__== '__main__':
