@@ -565,6 +565,19 @@ def main():
                 fitness1, fitness2 = ind.fitness.values
                 writer.writerow([inclinations, raans, fitness1, fitness2])
         print(f"Top 10 best individuals saved to {filename}")
+    # Save the top 10 best individuals to a file
+    def save_best_10_fitness_per_gen(population, filename="best_fitness_nsga3_simple.csv"):
+        top_individuals = tools.selBest(population, 10)  # Select the top 10 best individuals
+        # Save the best individuals to a CSV file
+        with open(filename, "w", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["Inclinations", "RAANs", "Fitness1", "Fitness2"])  # Header
+
+            for ind in top_individuals:
+                inclinations, raans = ind[0], ind[1]
+                fitness1, fitness2 = ind.fitness.values
+                writer.writerow([inclinations, raans, fitness1, fitness2])
+        print(f"Top 10 best individuals saved to {filename}")
 
     # Number of planes in the constellation
     NUM_PLANES = 3
@@ -653,6 +666,7 @@ def main():
             population_sizes.append(len(population))
             
             # Print best individual of the current generation
+            save_best_10_fitness_per_gen(population)
             best_ind = tools.selBest(population, 1)[0]
             print(f"Generation {gen}: Best Individual = {best_ind}, Fitness = {best_ind.fitness.values}")
 
