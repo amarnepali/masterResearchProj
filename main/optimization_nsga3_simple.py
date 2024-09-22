@@ -26,6 +26,8 @@ from org.orekit.frames import Transform
 from org.hipparchus.geometry import Vector
 
 import numpy as np
+import csv  # To save individuals to a CSV file
+
 
 import json
 from shapely.geometry import Point, Polygon, GeometryCollection
@@ -548,6 +550,21 @@ def main():
         inclination_list = [random_inclination() for _ in range(num_planes)]
         raan_list = [random_raan() for _ in range(num_planes)]
         return creator.Individual([inclination_list, raan_list])
+    
+    # Save the top 10 best individuals to a file
+    def save_best_individuals(population, filename="best_individuals_nsga3_simple.csv"):
+        top_individuals = tools.selBest(population, 10)  # Select the top 10 best individuals
+
+        # Save the best individuals to a CSV file
+        with open(filename, "w", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["Inclinations", "RAANs", "Fitness1", "Fitness2"])  # Header
+
+            for ind in top_individuals:
+                inclinations, raans = ind[0], ind[1]
+                fitness1, fitness2 = ind.fitness.values
+                writer.writerow([inclinations, raans, fitness1, fitness2])
+        print(f"Top 10 best individuals saved to {filename}")
 
     # Number of planes in the constellation
     NUM_PLANES = 3
@@ -600,7 +617,7 @@ def main():
     toolbox.register("select", select_nsga3, reference_points=reference_points)
 
     # Function to store and plot the population sizes
-    def run_ga_dynamic(pop_size=20, ngen=10):
+    def run_ga_dynamic(pop_size, ngen):
         population = toolbox.population(n=pop_size)
         
         # Store the population sizes for each generation
@@ -675,6 +692,9 @@ def main():
         top_10_best = sorted(pareto_front, key=lambda ind: ind.fitness.values)[:10]
         # Print the top 10 individuals with their fitness values (revisit time and dwell time)
         top_10_fitness_values = [(ind.fitness.values[0], ind.fitness.values[1]) for ind in top_10_best]
+
+        # Save the top 10 best individuals after all generations are complete
+        save_best_individuals(population)
 
         # Display the top 10 best fitness values
         for i, fitness in enumerate(top_10_fitness_values, 1):
