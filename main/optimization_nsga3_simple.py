@@ -722,7 +722,7 @@ def main():
             print(f"Individual {i}: Revisit Time = {fitness[0]}, Dwell Time = {fitness[1]} seconds")
 
     #run the algorithm
-    run_ga_dynamic(pop_size=50, ngen = 40)
+    run_ga_dynamic(pop_size=50, ngen = 20)
 
 # hook
 if __name__== '__main__':
