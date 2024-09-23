@@ -565,20 +565,27 @@ def main():
                 fitness1, fitness2 = ind.fitness.values
                 writer.writerow([inclinations, raans, fitness1, fitness2])
         print(f"Top 10 best individuals saved to {filename}")
-    # Save the top 10 best individuals to a file
-    def save_best_10_fitness_per_gen(population, filename="best_fitness_nsga3_simple.csv"):
+        # Save the top 10 best individuals to a file
+    def save_best_10_fitness_per_gen(population, gen, filename="best_fitness_nsga3_simple.csv"):
+        """
+        Save the top 10 individuals and their fitness values for each generation.
+        The results will be appended to the file to store fitness across generations.
+        """
         top_individuals = tools.selBest(population, 10)  # Select the top 10 best individuals
-        # Save the best individuals to a CSV file
-        with open(filename, "w", newline="") as csvfile:
+        
+        # Append the best individuals to a CSV file
+        with open(filename, "a", newline="") as csvfile:  # Open in append mode
             writer = csv.writer(csvfile)
-            writer.writerow(["Inclinations", "RAANs", "Fitness1", "Fitness2"])  # Header
-
+            # Write header only in the first generation
+            if gen == 0:
+                writer.writerow(["Generation", "Inclinations", "RAANs", "Fitness1_crt", "Fitness2_cdt"])
+            
             for ind in top_individuals:
                 inclinations, raans = ind[0], ind[1]
                 fitness1, fitness2 = ind.fitness.values
-                writer.writerow([inclinations, raans, fitness1, fitness2])
-        print(f"Top 10 best individuals saved to {filename}")
-
+                writer.writerow([gen, inclinations, raans, fitness1, fitness2])
+        
+        print(f"Top 10 best individuals for generation {gen} saved to {filename}")
     # Number of planes in the constellation
     NUM_PLANES = 3
 
@@ -666,7 +673,7 @@ def main():
             population_sizes.append(len(population))
             
             # Print best individual of the current generation
-            save_best_10_fitness_per_gen(population)
+            save_best_10_fitness_per_gen(population,gen)
             best_ind = tools.selBest(population, 1)[0]
             print(f"Generation {gen}: Best Individual = {best_ind}, Fitness = {best_ind.fitness.values}")
 
