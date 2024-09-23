@@ -26,8 +26,8 @@ from org.orekit.frames import Transform
 from org.hipparchus.geometry import Vector
 
 import numpy as np
-import csv
-import random
+import csv  # To save individuals to a CSV file
+
 
 import json
 from shapely.geometry import Point, Polygon, GeometryCollection
@@ -495,7 +495,7 @@ def main():
         plt.grid(True)
         # plt.legend()
         # plt.show()
-        plt.savefig(os.path.join('DATA_OUT', 'final_population_fitness_nsga3_dynamic_cm'))
+        plt.savefig(os.path.join('DATA_OUT', 'final_population_fitness_nsga3_simple'))
 
     def plot_fitness_values_per_individual(fitness_values):
         # Plotting the fitness values of cum dt and rt, with each individual 
@@ -512,7 +512,7 @@ def main():
         plt.title('revisit Time Intervals over Events')
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig(os.path.join('DATA_OUT', 'revisit_time_per_individuals_nsga3_dynamic_cm'))
+        plt.savefig(os.path.join('DATA_OUT', 'cum_revisit_time_per_individuals_nsga3_simple'))
 
         # Generate a line plot for comparison
         plt.figure(figsize=(14, 8))
@@ -522,7 +522,7 @@ def main():
         plt.title('dwell Time Intervals over Events')
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig(os.path.join('DATA_OUT', 'dwell_time_per_individuals_nsga3_dynamic_cm'))
+        plt.savefig(os.path.join('DATA_OUT', 'cum_dwell_time_per_individuals_nsga3_simple'))
 
         # plt.show()
 
@@ -550,7 +550,42 @@ def main():
         inclination_list = [random_inclination() for _ in range(num_planes)]
         raan_list = [random_raan() for _ in range(num_planes)]
         return creator.Individual([inclination_list, raan_list])
+    
+    # Save the top 10 best individuals to a file
+    def save_best_individuals(population, filename="best_individuals_nsga3_simple.csv"):
+        top_individuals = tools.selBest(population, 10)  # Select the top 10 best individuals
 
+        # Save the best individuals to a CSV file
+        with open(filename, "w", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["Inclinations", "RAANs", "Fitness1", "Fitness2"])  # Header
+
+            for ind in top_individuals:
+                inclinations, raans = ind[0], ind[1]
+                fitness1, fitness2 = ind.fitness.values
+                writer.writerow([inclinations, raans, fitness1, fitness2])
+        print(f"Top 10 best individuals saved to {filename}")
+        # Save the top 10 best individuals to a file
+    def save_best_10_fitness_per_gen(population, gen, filename="best_fitness_nsga3_simple.csv"):
+        """
+        Save the top 10 individuals and their fitness values for each generation.
+        The results will be appended to the file to store fitness across generations.
+        """
+        top_individuals = tools.selBest(population, 10)  # Select the top 10 best individuals
+        
+        # Append the best individuals to a CSV file
+        with open(filename, "a", newline="") as csvfile:  # Open in append mode
+            writer = csv.writer(csvfile)
+            # Write header only in the first generation
+            if gen == 0:
+                writer.writerow(["Generation", "Inclinations", "RAANs", "Fitness1_crt", "Fitness2_cdt"])
+            
+            for ind in top_individuals:
+                inclinations, raans = ind[0], ind[1]
+                fitness1, fitness2 = ind.fitness.values
+                writer.writerow([gen, inclinations, raans, fitness1, fitness2])
+        
+        print(f"Top 10 best individuals for generation {gen} saved to {filename}")
     # Number of planes in the constellation
     NUM_PLANES = 3
 
@@ -590,48 +625,6 @@ def main():
         print("mutation individual: ", individual)
         return individual,
 
-    # Dynamic crossover and mutation adjustment based on generation
-    def dynamic_crossover_mutation(gen, ngen, Pc_start=0.7, Pm_start=0.2, Pm_end=0.4):
-        Pc = Pc_start * (1 - gen / ngen)  # Crossover rate decreases over generations
-        Pm = Pm_start + (Pm_end - Pm_start) * (gen / ngen)  # Mutation rate increases over generations
-        return Pc, Pm
-
-     # Save the top 10 best final indivudal of population to a file
-    def save_best_individuals(population, filename="best_individuals_nsga3_dynamic_cm.csv"):
-        top_individuals = tools.selBest(population, 10)  # Select the top 10 best individuals
-
-        # Save the best individuals to a CSV file
-        with open(filename, "w", newline="") as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(["Inclinations", "RAANs", "Fitness1_crt", "Fitness2_cdt"])  # Header
-
-            for ind in top_individuals:
-                inclinations, raans = ind[0], ind[1]
-                fitness1, fitness2 = ind.fitness.values
-                writer.writerow([inclinations, raans, fitness1, fitness2])
-        print(f"Top 10 best individuals saved to {filename}")
-
-    def save_best_10_fitness_per_gen(population, gen, filename="best_fitness_nsga3_dynamic_cm.csv"):
-        """
-        Save the top 10 individuals and their fitness values for each generation.
-        The results will be appended to the file to store fitness across generations.
-        """
-        top_individuals = tools.selBest(population, 10)  # Select the top 10 best individuals
-        
-        # Append the best individuals to a CSV file
-        with open(filename, "a", newline="") as csvfile:  # Open in append mode
-            writer = csv.writer(csvfile)
-            # Write header only in the first generation
-            if gen == 0:
-                writer.writerow(["Generation", "Inclinations", "RAANs", "Fitness1_crt", "Fitness2_cdt"])
-            
-            for ind in top_individuals:
-                inclinations, raans = ind[0], ind[1]
-                fitness1, fitness2 = ind.fitness.values
-                writer.writerow([gen, inclinations, raans, fitness1, fitness2])
-        
-        print(f"Top 10 best individuals for generation {gen} saved to {filename}")
-
 
     toolbox.register("evaluate", evaluate_both)
 
@@ -643,80 +636,56 @@ def main():
     reference_points = generate_reference_points(nobj=2, p=12)
     toolbox.register("select", select_nsga3, reference_points=reference_points)
 
-    # Genetic algorithm with dynamic crossover and mutation probabilities
-    def run_ga_mu_plus_lambda_dynamic(initial_mu, lambda_, ngen, min_mu, decrease_rate):
-        population = toolbox.population(n=initial_mu)
-        population_sizes = []
+    # Function to store and plot the population sizes
+    def run_ga_dynamic(pop_size, ngen):
+        population = toolbox.population(n=pop_size)
         
+        # Store the population sizes for each generation
+        population_sizes = []
+
         for gen in range(ngen):
-            Pc, Pm = dynamic_crossover_mutation(gen, ngen)  # Dynamic crossover and mutation probabilities
-            print(f"Generation {gen}: Crossover Probability = {Pc}, Mutation Probability = {Pm}")
-
-            # offspring = toolbox.select(population, lambda_)
-            # offspring = list(map(toolbox.clone, offspring))
+            offspring = toolbox.select(population, len(population))
+            offspring = list(map(toolbox.clone, offspring))
             
-            # # Apply crossover (with dynamic Pc)
-            # for child1, child2 in zip(offspring[::2], offspring[1::2]):
-            #     if np.random.random() < Pc:
-            #         toolbox.mate(child1, child2)
-            #         del child1.fitness.values
-            #         del child2.fitness.values
-            
-            # # Apply mutation (with dynamic Pm)
-            # for mutant in offspring:
-            #     if np.random.random() < Pm:
-            #         toolbox.mutate(mutant)
-            #         del mutant.fitness.values
-            # Select parents (few)
-            parents = toolbox.select(population, len(population))
-
-            # Generate offspring (more)
-            offspring = []
-            for _ in range(lambda_ // 2):  # Each crossover generates 2 offspring
-                parent1, parent2 = random.sample(parents, 2)
-                child1, child2 = toolbox.clone(parent1), toolbox.clone(parent2)
-
-                if random.random() < Pc:
+            # Apply crossover
+            for child1, child2 in zip(offspring[::2], offspring[1::2]):
+                if np.random.random() < 0.7:  # Assuming fixed crossover rate for now
                     toolbox.mate(child1, child2)
                     del child1.fitness.values
                     del child2.fitness.values
-                
-                if random.random() < Pm:
-                    toolbox.mutate(child1)
-                    del child1.fitness.values
-                if random.random() < Pm:
-                    toolbox.mutate(child2)
-                    del child2.fitness.values
+            
+            # Apply mutation
+            for mutant in offspring:
+                if np.random.random() < 0.2:  # Assuming fixed mutation rate for now
+                    toolbox.mutate(mutant)
+                    del mutant.fitness.values
 
-                offspring.extend([child1, child2])
-                
-            # Evaluate the offspring
+            # Evaluate individuals with invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
             fitnesses = map(toolbox.evaluate, invalid_ind)
             for ind, fit in zip(invalid_ind, fitnesses):
                 ind.fitness.values = fit
 
-            pop_size = len(population)
-            mu = max(min_mu, pop_size-round(pop_size*decrease_rate/100)) # new population size
             # Replace the population with the new offspring
-            population[:] = toolbox.select(offspring, mu)
-
-            # Save best 10 individuals
-            save_best_10_fitness_per_gen(population, gen)
+            population[:] = offspring
+            
+            # Store the population size for this generation
             population_sizes.append(len(population))
-
+            
             # Print best individual of the current generation
+            save_best_10_fitness_per_gen(population,gen)
             best_ind = tools.selBest(population, 1)[0]
             print(f"Generation {gen}: Best Individual = {best_ind}, Fitness = {best_ind.fitness.values}")
-        
+
         # Plot population sizes over generations
         plt.plot(range(ngen), population_sizes, marker='o')
         plt.xlabel("Generations")
         plt.ylabel("Population Size")
         plt.title("Population Size over Generations")
-        plt.savefig(os.path.join('DATA_OUT', 'pop_size_over_generation_nsga3_dynamic_cm'))
+        plt.savefig(os.path.join('DATA_OUT', 'pop_size_over_generation_nsga3_simple'))
 
 
+        ####################################################
         # plot the final population 
         plot_population(population)
         # plot the fitness_values per individuals event
@@ -737,7 +706,7 @@ def main():
         plt.grid(True)
         # plt.legend()
         # plt.show()
-        plt.savefig(os.path.join('DATA_OUT', 'pareto_front_nsga3_dynamic_cm'))
+        plt.savefig(os.path.join('DATA_OUT', 'pareto_front_nsga3_simple'))
 
 
         # Get the top 10 best individuals from the Pareto front based on fitness values
@@ -745,23 +714,15 @@ def main():
         # Print the top 10 individuals with their fitness values (revisit time and dwell time)
         top_10_fitness_values = [(ind.fitness.values[0], ind.fitness.values[1]) for ind in top_10_best]
 
+        # Save the top 10 best individuals after all generations are complete
+        save_best_individuals(population)
+
         # Display the top 10 best fitness values
         for i, fitness in enumerate(top_10_fitness_values, 1):
             print(f"Individual {i}: Revisit Time = {fitness[0]}, Dwell Time = {fitness[1]} seconds")
 
-        return population
-        
-    run_ga_mu_plus_lambda_dynamic(initial_mu=50, lambda_=50, ngen=40, min_mu=20, decrease_rate=5)  # Example population of 20 and 10 generations
-
-    # # Create population
-    # population = toolbox.population(n=4)
-
-    # # Run NSGA-III (similar to NSGA-II)
-    # algorithms.eaMuPlusLambda(population, toolbox, mu=10, lambda_=20, cxpb=0.7, mutpb=0.2, ngen=2, stats=None, halloffame=None, verbose=True)
-
-
-    ####################################################
-    
+    #run the algorithm
+    run_ga_dynamic(pop_size=50, ngen = 40)
 
 # hook
 if __name__== '__main__':
