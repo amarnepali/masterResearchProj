@@ -591,7 +591,7 @@ def main():
         return individual,
 
     # Dynamic crossover and mutation adjustment based on generation
-    def dynamic_crossover_mutation(gen, ngen, Pc_start=0.9, Pm_start=0.05, Pm_end=0.1):
+    def dynamic_crossover_mutation(gen, ngen, Pc_start=0.9, Pm_start=0.05, Pm_end=0.3):
         Pc = Pc_start * (1 - gen / ngen)  # Crossover rate decreases over generations
         Pm = Pm_start + (Pm_end - Pm_start) * (gen / ngen)  # Mutation rate increases over generations
         return Pc, Pm
@@ -711,7 +711,7 @@ def main():
             save_best_10_fitness_per_gen(population, gen)
             population_sizes.append(len(population))
             
-
+            print(f"generation: {gen}, nevals: {len(invalid_ind)}")
             # Print best individual of the current generation
             best_ind = tools.selBest(population, 1)[0]
             print(f"Generation {gen}: Best Individual = {best_ind}, Fitness = {best_ind.fitness.values}")
