@@ -591,7 +591,7 @@ def main():
         return individual,
 
     # Dynamic crossover and mutation adjustment based on generation
-    def dynamic_crossover_mutation(gen, ngen, Pc_start=0.7, Pm_start=0.2, Pm_end=0.4):
+    def dynamic_crossover_mutation(gen, ngen, Pc_start=0.9, Pm_start=0.05, Pm_end=0.1):
         Pc = Pc_start * (1 - gen / ngen)  # Crossover rate decreases over generations
         Pm = Pm_start + (Pm_end - Pm_start) * (gen / ngen)  # Mutation rate increases over generations
         return Pc, Pm
@@ -647,7 +647,12 @@ def main():
     def run_ga_mu_plus_lambda_dynamic(initial_mu, lambda_, ngen, min_mu, decrease_rate):
         population = toolbox.population(n=initial_mu)
         population_sizes = []
-        
+        # Evaluate the population
+        invalid_ind = [ind for ind in population if not ind.fitness.valid]
+        fitnesses = map(toolbox.evaluate, invalid_ind)
+        for ind, fit in zip(invalid_ind, fitnesses):
+            ind.fitness.values = fit
+
         for gen in range(ngen):
             Pc, Pm = dynamic_crossover_mutation(gen, ngen)  # Dynamic crossover and mutation probabilities
             print(f"Generation {gen}: Crossover Probability = {Pc}, Mutation Probability = {Pm}")
@@ -667,7 +672,8 @@ def main():
             #     if np.random.random() < Pm:
             #         toolbox.mutate(mutant)
             #         del mutant.fitness.values
-            # Select parents (few)
+
+            # Select parents (all population, so the solution includes diversity)
             parents = toolbox.select(population, len(population))
 
             # Generate offspring (more)
@@ -698,12 +704,13 @@ def main():
 
             pop_size = len(population)
             mu = max(min_mu, pop_size-round(pop_size*decrease_rate/100)) # new population size
-            # Replace the population with the new offspring
-            population[:] = toolbox.select(offspring, mu)
+            # select the population for next generation with the new offspring
+            population[:] = toolbox.select(offspring+population, mu)
 
             # Save best 10 individuals
             save_best_10_fitness_per_gen(population, gen)
             population_sizes.append(len(population))
+            
 
             # Print best individual of the current generation
             best_ind = tools.selBest(population, 1)[0]
@@ -717,6 +724,7 @@ def main():
         plt.savefig(os.path.join('DATA_OUT', 'pop_size_over_generation_nsga3_dynamic_cm'))
 
 
+        save_best_individuals(population)
         # plot the final population 
         plot_population(population)
         # plot the fitness_values per individuals event
@@ -751,14 +759,7 @@ def main():
 
         return population
         
-    run_ga_mu_plus_lambda_dynamic(initial_mu=50, lambda_=50, ngen=40, min_mu=20, decrease_rate=5)  # Example population of 20 and 10 generations
-
-    # # Create population
-    # population = toolbox.population(n=4)
-
-    # # Run NSGA-III (similar to NSGA-II)
-    # algorithms.eaMuPlusLambda(population, toolbox, mu=10, lambda_=20, cxpb=0.7, mutpb=0.2, ngen=2, stats=None, halloffame=None, verbose=True)
-
+    run_ga_mu_plus_lambda_dynamic(initial_mu=50, lambda_=50, ngen=40, min_mu=20, decrease_rate=5)  # Example population of 20 and 10 generations lmbda_>= mu
 
     ####################################################
     
