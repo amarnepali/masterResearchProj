@@ -560,8 +560,8 @@ def main():
 
     # Corrected crossover function (element-wise blending)
     def cxBlendPlanes(ind1, ind2, alpha=0.5):
-        print("ind1 : ",ind1)
-        print("ind2 : ", ind2)
+        # print("ind1 : ",ind1)
+        # print("ind2 : ", ind2)
         for i in range(len(ind1[0])):  # Iterate over each plane
             # Blending inclination
             ind1[0][i] = (1 - alpha) * ind1[0][i] + alpha * ind2[0][i]
