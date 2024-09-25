@@ -657,45 +657,45 @@ def main():
             Pc, Pm = dynamic_crossover_mutation(gen, ngen)  # Dynamic crossover and mutation probabilities
             print(f"Generation {gen}: Crossover Probability = {Pc}, Mutation Probability = {Pm}")
 
-            # offspring = toolbox.select(population, lambda_)
-            # offspring = list(map(toolbox.clone, offspring))
-            
-            # # Apply crossover (with dynamic Pc)
-            # for child1, child2 in zip(offspring[::2], offspring[1::2]):
-            #     if np.random.random() < Pc:
+        
+            # Select parents (all population, so the solution includes diversity)
+            # parents = toolbox.select(population, len(population))
+
+        
+            # offspring = []
+            # for _ in range(lambda_ // 2):  # Each crossover generates 2 offspring
+            #     parent1, parent2 = random.sample(parents, 2)
+            #     child1, child2 = toolbox.clone(parent1), toolbox.clone(parent2)
+
+            #     if random.random() < Pc:
             #         toolbox.mate(child1, child2)
             #         del child1.fitness.values
             #         del child2.fitness.values
-            
-            # # Apply mutation (with dynamic Pm)
-            # for mutant in offspring:
-            #     if np.random.random() < Pm:
-            #         toolbox.mutate(mutant)
-            #         del mutant.fitness.values
+                
+            #     if random.random() < Pm:
+            #         toolbox.mutate(child1)
+            #         del child1.fitness.values
+            #     if random.random() < Pm:
+            #         toolbox.mutate(child2)
+            #         del child2.fitness.values
 
-            # Select parents (all population, so the solution includes diversity)
-            parents = toolbox.select(population, len(population))
-
-            # Generate offspring (more)
+            #     offspring.extend([child1, child2])
+            # Generate offspring varOr method
             offspring = []
-            for _ in range(lambda_ // 2):  # Each crossover generates 2 offspring
-                parent1, parent2 = random.sample(parents, 2)
-                child1, child2 = toolbox.clone(parent1), toolbox.clone(parent2)
-
-                if random.random() < Pc:
-                    toolbox.mate(child1, child2)
-                    del child1.fitness.values
-                    del child2.fitness.values
-                
-                if random.random() < Pm:
-                    toolbox.mutate(child1)
-                    del child1.fitness.values
-                if random.random() < Pm:
-                    toolbox.mutate(child2)
-                    del child2.fitness.values
-
-                offspring.extend([child1, child2])
-                
+            for _ in range(lambda_):
+                op_choice = random.random()
+                if op_choice < Pc:            # Apply crossover
+                    ind1, ind2 = [toolbox.clone(i) for i in random.sample(population, 2)]
+                    ind1, ind2 = toolbox.mate(ind1, ind2)
+                    del ind1.fitness.values
+                    offspring.append(ind1)
+                elif op_choice < Pc + Pm:  # Apply mutation
+                    ind = toolbox.clone(random.choice(population))
+                    ind, = toolbox.mutate(ind)
+                    del ind.fitness.values
+                    offspring.append(ind)
+                else:                           # Apply reproduction
+                    offspring.append(random.choice(population))    
             # Evaluate the offspring
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
             fitnesses = map(toolbox.evaluate, invalid_ind)
