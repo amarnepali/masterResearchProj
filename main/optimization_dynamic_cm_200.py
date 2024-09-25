@@ -611,7 +611,7 @@ def main():
                 writer.writerow([inclinations, raans, fitness1, fitness2])
         print(f"Top 10 best individuals saved to {filename}")
 
-    def save_best_10_fitness_per_gen(population, gen, filename="best_fitness_nsga3_dynamic_cm.csv"):
+    def save_best_10_fitness_per_gen(population, gen, filename="best_fitness_nsga3_dynamic_cm_200.csv"):
         """
         Save the top 10 individuals and their fitness values for each generation.
         The results will be appended to the file to store fitness across generations.
