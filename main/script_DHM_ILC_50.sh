@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --ntasks=1 # indicate the number of core required
-#SBATCH --job-name=nepa0034nsga3_dynamic200P
+#SBATCH --job-name=nepa0034DHM_ILC_50P
 #SBATCH --output=/home/$FAN/%x-%j.out.txt
 #SBATCH --error=/home/$FAN/%x-%j.err.txt
 #SBATCH --partition=gpu
